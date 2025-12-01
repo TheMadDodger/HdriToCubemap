@@ -27,7 +27,7 @@ template <typename T>
 class HdriToCubemap
 {
     public:
-        HdriToCubemap(const std::string& fileLocation, int cubemapResolution, bool filterLinear = true);
+        HdriToCubemap(const std::string& fileLocation, int cubemapResolution, bool filterLinear = true, int preferedChannels=0);
         ~HdriToCubemap();
 
         bool isHdri () const {return m_isHdri; } 
@@ -55,7 +55,7 @@ class HdriToCubemap
 };
 
 template <> 
-HdriToCubemap<unsigned char>::HdriToCubemap(const std::string& pathHdri, int cubemapResolution, bool filterLinear)
+HdriToCubemap<unsigned char>::HdriToCubemap(const std::string& pathHdri, int cubemapResolution, bool filterLinear, int preferedChannels)
     : m_cubemapResolution(cubemapResolution), m_filterLinear(filterLinear)
 {
     stbi_set_flip_vertically_on_load(1);
@@ -64,7 +64,9 @@ HdriToCubemap<unsigned char>::HdriToCubemap(const std::string& pathHdri, int cub
         std::cout << "Warning: image will be converted from hdr to ldr by stb_image. Use float-type template argument to create an hdr cubemap\n";
     m_isHdri = false;
 
-    m_imageData = stbi_load(pathHdri.c_str(), &m_width, &m_height, &m_channels, 0);
+    m_imageData = stbi_load(pathHdri.c_str(), &m_width, &m_height, &m_channels, preferedChannels);
+    if(preferedChannels)
+        m_channels = preferedChannels;
     if(!m_imageData)
         throw std::runtime_error(std::string("Failed to load image ") + pathHdri);
 
@@ -76,7 +78,7 @@ HdriToCubemap<unsigned char>::HdriToCubemap(const std::string& pathHdri, int cub
 }
 
 template <> 
-HdriToCubemap<float>::HdriToCubemap(const std::string& pathHdri, int cubemapResolution, bool filterLinear)
+HdriToCubemap<float>::HdriToCubemap(const std::string& pathHdri, int cubemapResolution, bool filterLinear, int preferedChannels)
     : m_cubemapResolution(cubemapResolution), m_filterLinear(filterLinear)
 {
     m_isHdri = stbi_is_hdr(pathHdri.c_str());
@@ -84,7 +86,9 @@ HdriToCubemap<float>::HdriToCubemap(const std::string& pathHdri, int cubemapReso
         std::cout <<  "Warning: image will be converted from ldr to hdr by stb_image. Use unsigned-char-type template argument to create an ldr cubemap\n";
     m_isHdri = true;
 
-    m_imageData = stbi_loadf(pathHdri.c_str(), &m_width, &m_height, &m_channels, 0);
+    m_imageData = stbi_loadf(pathHdri.c_str(), &m_width, &m_height, &m_channels, preferedChannels);
+    if(preferedChannels)
+        m_channels = preferedChannels;
     if(!m_imageData)
         throw std::runtime_error(std::string("Failed to load image ") + pathHdri);
     
